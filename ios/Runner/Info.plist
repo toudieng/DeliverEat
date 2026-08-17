@@ -7,7 +7,11 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Delivereat</string>
+	<string>DeliverEat</string>
+	<key>NSCameraUsageDescription</key>
+	<string>DeliverEat a besoin de l'appareil photo pour changer votre photo de profil.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>DeliverEat a besoin d'accéder à vos photos pour changer votre photo de profil.</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
