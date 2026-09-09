@@ -34,6 +34,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
   bool _saving = false;
   bool _uploadingAvatar = false;
   String? _error;
+  // Bumped after every successful avatar upload so the CircleAvatar's
+  // ImageProvider is a genuinely different object even when the server
+  // keeps the same avatar URL — otherwise Flutter never re-resolves the
+  // image on rebuild (it only refetches when the provider actually
+  // changes), so the freshly uploaded photo never appears.
+  int _avatarCacheBuster = 0;
 
   @override
   void initState() {
@@ -86,11 +92,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
       }
       final updated = await _profileService.uploadAvatar(file);
       // The server keeps the same avatar URL when replacing the file, so the
-      // disk/memory cache must be evicted or the old image keeps showing.
+      // disk cache must be evicted or the old bytes keep being served.
       if (updated.avatarUrl != null && updated.avatarUrl!.isNotEmpty) {
         await CachedNetworkImage.evictFromCache(updated.resolvedAvatarUrl);
       }
       if (!mounted) return;
+      setState(() => _avatarCacheBuster = DateTime.now().millisecondsSinceEpoch);
       context.read<AuthProvider>().setUser(updated);
     } on ApiException catch (e) {
       if (!mounted) return;
@@ -168,7 +175,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     radius: 52,
                     backgroundColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.12),
                     backgroundImage: user?.avatarUrl != null && user!.avatarUrl!.isNotEmpty
-                        ? CachedNetworkImageProvider(user.resolvedAvatarUrl)
+                        ? CachedNetworkImageProvider(
+                            _avatarCacheBuster == 0
+                                ? user.resolvedAvatarUrl
+                                : '${user.resolvedAvatarUrl}?v=$_avatarCacheBuster',
+                          )
                         : null,
                     child: (user?.avatarUrl == null || user!.avatarUrl!.isEmpty)
                         ? Text(
