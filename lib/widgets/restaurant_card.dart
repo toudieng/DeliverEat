@@ -14,6 +14,7 @@ class RestaurantCard extends StatelessWidget {
     this.isFavorite = false,
     this.onFavoriteTap,
     this.heroTag,
+    this.animationDelay = Duration.zero,
   });
 
   final Restaurant restaurant;
@@ -21,6 +22,7 @@ class RestaurantCard extends StatelessWidget {
   final bool isFavorite;
   final VoidCallback? onFavoriteTap;
   final String? heroTag;
+  final Duration animationDelay;
 
   @override
   Widget build(BuildContext context) {
@@ -107,7 +109,10 @@ class RestaurantCard extends StatelessWidget {
           ],
         ),
       ),
-    ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.05, end: 0, curve: Curves.easeOut);
+    )
+        .animate(delay: animationDelay)
+        .fadeIn(duration: 350.ms, curve: Curves.easeOut)
+        .slideY(begin: 0.08, end: 0, duration: 350.ms, curve: Curves.easeOutCubic);
   }
 }
 

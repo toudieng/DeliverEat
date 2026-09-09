@@ -37,11 +37,13 @@ class FavoritesScreen extends StatelessWidget {
             itemBuilder: (context, index) {
               final restaurant = favorites.favorites[index];
               return Padding(
+                key: ValueKey(restaurant.id),
                 padding: const EdgeInsets.only(bottom: 16),
                 child: RestaurantCard(
                   restaurant: restaurant,
                   isFavorite: true,
                   heroTag: 'fav-restaurant-image-${restaurant.id}',
+                  animationDelay: Duration(milliseconds: 40 * index.clamp(0, 8)),
                   onFavoriteTap: () => favorites.toggle(restaurant),
                   onTap: () => Navigator.of(context).push(
                     MaterialPageRoute(

@@ -43,6 +43,13 @@ class _HomeScreenState extends State<HomeScreen> {
     _scrollController.addListener(_onScroll);
   }
 
+  String _greeting() {
+    final hour = DateTime.now().hour;
+    if (hour < 12) return 'Bonjour ☀️ Petite faim ?';
+    if (hour < 18) return 'Bon appétit 🍽️';
+    return 'Bonsoir 🌙 On commande ?';
+  }
+
   void _onScroll() {
     if (_scrollController.position.pixels > _scrollController.position.maxScrollExtent - 300) {
       context.read<RestaurantListProvider>().loadMore();
@@ -70,28 +77,71 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             if (!isOnline || provider.isOffline) OfflineBanner(message: strings.t('offline')),
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Livraison à', style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Theme.of(context).colorScheme.onSurfaceVariant,
-                          )),
-                      Row(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 4),
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.fromLTRB(20, 18, 20, 20),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: AppColors.heroGradient,
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(24),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.primary.withValues(alpha: 0.28),
+                      blurRadius: 20,
+                      offset: const Offset(0, 10),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Icon(Icons.location_on_rounded, size: 18, color: AppColors.primary),
-                          const SizedBox(width: 4),
-                          Text('Dakar, Sénégal', style: Theme.of(context).textTheme.titleMedium),
+                          Text(
+                            _greeting(),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 19,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Row(
+                            children: [
+                              const Icon(Icons.location_on_rounded, size: 16, color: Colors.white),
+                              const SizedBox(width: 4),
+                              Text(
+                                'Livraison à Dakar, Sénégal',
+                                style: TextStyle(color: Colors.white.withValues(alpha: 0.92), fontSize: 13),
+                              ),
+                            ],
+                          ),
                         ],
                       ),
-                    ],
-                  ),
-                ],
+                    ),
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.18),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.delivery_dining_rounded, color: Colors.white, size: 28),
+                    ).animate(onPlay: (c) => c.repeat(reverse: true)).moveY(
+                          begin: -2,
+                          end: 2,
+                          duration: 1400.ms,
+                          curve: Curves.easeInOut,
+                        ),
+                  ],
+                ),
               ),
-            ).animate().fadeIn(),
+            ).animate().fadeIn(duration: 350.ms).slideY(begin: -0.08, end: 0, curve: Curves.easeOut),
+            const SizedBox(height: 10),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: TextField(
@@ -203,10 +253,12 @@ class _HomeScreenState extends State<HomeScreen> {
               }
               final restaurant = provider.restaurants[index];
               return Padding(
+                key: ValueKey(restaurant.id),
                 padding: const EdgeInsets.only(bottom: 16),
                 child: RestaurantCard(
                   restaurant: restaurant,
                   isFavorite: favorites.isFavorite(restaurant.id),
+                  animationDelay: Duration(milliseconds: 40 * index.clamp(0, 8)),
                   onFavoriteTap: () => favorites.toggle(restaurant),
                   onTap: () => _openRestaurant(restaurant),
                 ),
