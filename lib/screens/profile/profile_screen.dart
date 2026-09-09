@@ -9,9 +9,11 @@ import 'package:provider/provider.dart';
 import '../../core/network/api_exception.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/validators.dart';
+import '../../models/user.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/locale_provider.dart';
 import '../../providers/theme_provider.dart';
+import '../../services/auth_service.dart';
 import '../../services/profile_service.dart';
 import '../../widgets/primary_button.dart';
 import '../auth/login_screen.dart';
@@ -28,6 +30,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
   final ProfileService _profileService = ProfileService();
+  final AuthService _authService = AuthService();
   final ImagePicker _picker = ImagePicker();
 
   bool _editing = false;
@@ -90,15 +93,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
           message: 'Fichier trop volumineux',
         );
       }
-      final updated = await _profileService.uploadAvatar(file);
+      await _profileService.uploadAvatar(file);
+      // Don't trust the upload response's own shape for the fresh
+      // avatarUrl — re-fetch the canonical profile from /auth/me so we're
+      // never out of sync with whatever the upload endpoint actually
+      // returns.
+      final AppUser refreshed = await _authService.me();
       // The server keeps the same avatar URL when replacing the file, so the
       // disk cache must be evicted or the old bytes keep being served.
-      if (updated.avatarUrl != null && updated.avatarUrl!.isNotEmpty) {
-        await CachedNetworkImage.evictFromCache(updated.resolvedAvatarUrl);
+      if (refreshed.avatarUrl != null && refreshed.avatarUrl!.isNotEmpty) {
+        await CachedNetworkImage.evictFromCache(refreshed.resolvedAvatarUrl);
       }
       if (!mounted) return;
       setState(() => _avatarCacheBuster = DateTime.now().millisecondsSinceEpoch);
-      context.read<AuthProvider>().setUser(updated);
+      context.read<AuthProvider>().setUser(refreshed);
     } on ApiException catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.friendlyMessage)));
