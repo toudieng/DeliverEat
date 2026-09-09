@@ -13,7 +13,6 @@ class RestaurantCard extends StatelessWidget {
     required this.onTap,
     this.isFavorite = false,
     this.onFavoriteTap,
-    this.heroTag,
     this.animationDelay = Duration.zero,
   });
 
@@ -21,7 +20,6 @@ class RestaurantCard extends StatelessWidget {
   final VoidCallback onTap;
   final bool isFavorite;
   final VoidCallback? onFavoriteTap;
-  final String? heroTag;
   final Duration animationDelay;
 
   @override
@@ -40,23 +38,20 @@ class RestaurantCard extends StatelessWidget {
           children: [
             Stack(
               children: [
-                Hero(
-                  tag: heroTag ?? 'restaurant-image-${restaurant.id}',
-                  child: AspectRatio(
-                    aspectRatio: 16 / 9,
-                    child: ColorFiltered(
-                      colorFilter: restaurant.isOpen
-                          ? const ColorFilter.mode(Colors.transparent, BlendMode.multiply)
-                          : ColorFilter.mode(Colors.black.withValues(alpha: 0.45), BlendMode.darken),
-                      child: CachedNetworkImage(
-                        imageUrl: restaurant.resolvedImageUrl,
-                        fit: BoxFit.cover,
-                        width: double.infinity,
-                        placeholder: (_, _) => Container(color: scheme.surfaceContainerHighest),
-                        errorWidget: (_, _, _) => Container(
-                          color: scheme.surfaceContainerHighest,
-                          child: Icon(Icons.restaurant_rounded, color: scheme.onSurfaceVariant),
-                        ),
+                AspectRatio(
+                  aspectRatio: 16 / 9,
+                  child: ColorFiltered(
+                    colorFilter: restaurant.isOpen
+                        ? const ColorFilter.mode(Colors.transparent, BlendMode.multiply)
+                        : ColorFilter.mode(Colors.black.withValues(alpha: 0.45), BlendMode.darken),
+                    child: CachedNetworkImage(
+                      imageUrl: restaurant.resolvedImageUrl,
+                      fit: BoxFit.cover,
+                      width: double.infinity,
+                      placeholder: (_, _) => Container(color: scheme.surfaceContainerHighest),
+                      errorWidget: (_, _, _) => Container(
+                        color: scheme.surfaceContainerHighest,
+                        child: Icon(Icons.restaurant_rounded, color: scheme.onSurfaceVariant),
                       ),
                     ),
                   ),

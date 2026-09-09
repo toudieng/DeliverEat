@@ -145,13 +145,11 @@ class _RestaurantDetailScreenState extends State<RestaurantDetailScreen> {
               background: Stack(
                 fit: StackFit.expand,
                 children: [
-                  Hero(
-                    tag: 'restaurant-image-${restaurant.id}',
-                    child: CachedNetworkImage(
-                      imageUrl: restaurant.resolvedImageUrl,
-                      fit: BoxFit.cover,
-                      errorWidget: (_, _, _) => Container(color: Theme.of(context).colorScheme.surfaceContainerHighest),
-                    ),
+                  CachedNetworkImage(
+                    imageUrl: restaurant.resolvedImageUrl,
+                    fit: BoxFit.cover,
+                    placeholder: (_, _) => Container(color: Theme.of(context).colorScheme.surfaceContainerHighest),
+                    errorWidget: (_, _, _) => Container(color: Theme.of(context).colorScheme.surfaceContainerHighest),
                   ),
                   Container(
                     decoration: const BoxDecoration(
