@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/l10n/app_strings.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/formatters.dart';
 import '../../models/order.dart';
+import '../../providers/locale_provider.dart';
 import '../../providers/order_tracking_provider.dart';
 import '../../widgets/order_status_timeline.dart';
 import '../root/root_shell.dart';
@@ -31,10 +33,11 @@ class _OrderTrackingView extends StatelessWidget {
   Widget build(BuildContext context) {
     final tracking = context.watch<OrderTrackingProvider>();
     final order = tracking.order;
+    final strings = context.watch<LocaleProvider>().strings;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Suivi de commande'),
+        title: Text(strings.t('orderTracking')),
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 16),
@@ -61,12 +64,12 @@ class _OrderTrackingView extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            order.restaurantName ?? 'Votre commande',
+                            order.restaurantName ?? strings.t('yourOrder'),
                             style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 18),
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            'Commande #${order.id.length > 8 ? order.id.substring(0, 8) : order.id}',
+                            '${strings.t('orderNumber')} #${order.id.length > 8 ? order.id.substring(0, 8) : order.id}',
                             style: const TextStyle(color: Colors.white70, fontSize: 13),
                           ),
                           const SizedBox(height: 12),
@@ -78,7 +81,7 @@ class _OrderTrackingView extends StatelessWidget {
                       ),
                     ).animate().fadeIn().slideY(begin: 0.1, end: 0),
                     const SizedBox(height: 28),
-                    Text('Statut', style: Theme.of(context).textTheme.titleLarge),
+                    Text(strings.isFrench ? 'Statut' : 'Status', style: Theme.of(context).textTheme.titleLarge),
                     const SizedBox(height: 16),
                     AnimatedSwitcher(
                       duration: const Duration(milliseconds: 400),
@@ -88,12 +91,12 @@ class _OrderTrackingView extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 12),
-                    Text('Adresse de livraison', style: Theme.of(context).textTheme.titleMedium),
+                    Text(strings.t('deliveryAddress'), style: Theme.of(context).textTheme.titleMedium),
                     const SizedBox(height: 6),
                     Text(order.deliveryAddress, style: Theme.of(context).textTheme.bodyMedium),
                     if (order.notes != null && order.notes!.isNotEmpty) ...[
                       const SizedBox(height: 12),
-                      Text('Remarques', style: Theme.of(context).textTheme.titleMedium),
+                      Text(strings.isFrench ? 'Remarques' : 'Notes', style: Theme.of(context).textTheme.titleMedium),
                       const SizedBox(height: 6),
                       Text(order.notes!, style: Theme.of(context).textTheme.bodyMedium),
                     ],
@@ -106,7 +109,7 @@ class _OrderTrackingView extends StatelessWidget {
                             MaterialPageRoute(builder: (_) => const RootShell()),
                             (route) => false,
                           ),
-                          child: const Text("Retour à l'accueil"),
+                          child: Text(strings.t('backToHome')),
                         ),
                       ),
                   ],
@@ -123,6 +126,7 @@ class _LiveIndicator extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final AppStrings strings = context.watch<LocaleProvider>().strings;
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -136,7 +140,7 @@ class _LiveIndicator extends StatelessWidget {
         ).animate(onPlay: (c) => isLive ? c.repeat(reverse: true) : null).fadeIn(duration: 700.ms).then().fadeOut(duration: 700.ms),
         const SizedBox(width: 6),
         Text(
-          isLive ? 'En direct' : 'Reconnexion…',
+          isLive ? strings.t('live') : strings.t('reconnecting'),
           style: TextStyle(fontSize: 12, color: isLive ? AppColors.success : Colors.grey, fontWeight: FontWeight.w600),
         ),
       ],

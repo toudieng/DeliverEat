@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/l10n/app_strings.dart';
 import '../../core/utils/formatters.dart';
 import '../../models/order.dart';
+import '../../providers/locale_provider.dart';
 import '../../providers/order_provider.dart';
 import '../../widgets/order_status_timeline.dart';
 import '../../widgets/state_views.dart';
@@ -16,15 +18,36 @@ class OrderHistoryScreen extends StatefulWidget {
 }
 
 class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
-  static const Map<String?, String> _statusLabels = {
-    null: 'Toutes',
-    'pending': 'En attente',
-    'confirmed': 'Confirmées',
-    'preparing': 'En préparation',
-    'delivering': 'En livraison',
-    'delivered': 'Livrées',
-    'cancelled': 'Annulées',
-  };
+  static const List<String?> _statusFilters = [
+    null,
+    'pending',
+    'confirmed',
+    'preparing',
+    'delivering',
+    'delivered',
+    'cancelled',
+  ];
+
+  static String _statusLabel(AppStrings strings, String? status) {
+    switch (status) {
+      case null:
+        return strings.t('statusAll');
+      case 'pending':
+        return strings.t('statusPending');
+      case 'confirmed':
+        return strings.t('statusConfirmed');
+      case 'preparing':
+        return strings.t('statusPreparing');
+      case 'delivering':
+        return strings.t('statusDelivering');
+      case 'delivered':
+        return strings.t('statusDelivered');
+      case 'cancelled':
+        return strings.t('statusCancelled');
+      default:
+        return status;
+    }
+  }
 
   @override
   void initState() {
@@ -35,8 +58,9 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<OrderProvider>();
+    final strings = context.watch<LocaleProvider>().strings;
     return Scaffold(
-      appBar: AppBar(title: const Text('Mes commandes')),
+      appBar: AppBar(title: Text(strings.t('myOrders'))),
       body: Column(
         children: [
           SizedBox(
@@ -44,27 +68,27 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
             child: ListView(
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 20),
-              children: _statusLabels.entries.map((entry) {
-                final selected = provider.statusFilter == entry.key;
+              children: _statusFilters.map((status) {
+                final selected = provider.statusFilter == status;
                 return Padding(
                   padding: const EdgeInsets.only(right: 8),
                   child: ChoiceChip(
-                    label: Text(entry.value),
+                    label: Text(_statusLabel(strings, status)),
                     selected: selected,
-                    onSelected: (_) => context.read<OrderProvider>().setStatusFilter(entry.key),
+                    onSelected: (_) => context.read<OrderProvider>().setStatusFilter(status),
                   ),
                 );
               }).toList(),
             ),
           ),
           const SizedBox(height: 8),
-          Expanded(child: _buildBody(context, provider)),
+          Expanded(child: _buildBody(context, provider, strings)),
         ],
       ),
     );
   }
 
-  Widget _buildBody(BuildContext context, OrderProvider provider) {
+  Widget _buildBody(BuildContext context, OrderProvider provider, AppStrings strings) {
     switch (provider.state) {
       case OrdersLoadState.idle:
       case OrdersLoadState.loading:
@@ -75,9 +99,9 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
           onRetry: provider.loadOrders,
         );
       case OrdersLoadState.empty:
-        return const EmptyStateView(
-          message: 'Aucune commande',
-          subtitle: 'Vos commandes passées apparaîtront ici.',
+        return EmptyStateView(
+          message: strings.t('noOrders'),
+          subtitle: strings.t('noOrdersSubtitle'),
           icon: Icons.receipt_long_outlined,
         );
       case OrdersLoadState.loaded:
@@ -98,14 +122,15 @@ class _OrderTile extends StatelessWidget {
   final Order order;
 
   Future<void> _cancel(BuildContext context) async {
+    final strings = context.read<LocaleProvider>().strings;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Annuler la commande ?'),
-        content: const Text('Cette action est irréversible.'),
+        title: Text(strings.t('cancelOrderConfirmTitle')),
+        content: Text(strings.t('cancelOrderConfirmBody')),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Retour')),
-          FilledButton(onPressed: () => Navigator.pop(context, true), child: const Text('Annuler la commande')),
+          TextButton(onPressed: () => Navigator.pop(context, false), child: Text(strings.t('goBack'))),
+          FilledButton(onPressed: () => Navigator.pop(context, true), child: Text(strings.t('cancelOrderAction'))),
         ],
       ),
     );
@@ -115,12 +140,13 @@ class _OrderTile extends StatelessWidget {
     if (error != null) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Commande annulée')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(strings.t('orderCancelled'))));
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final strings = context.watch<LocaleProvider>().strings;
     return Card(
       margin: const EdgeInsets.only(bottom: 14),
       child: InkWell(
@@ -137,7 +163,7 @@ class _OrderTile extends StatelessWidget {
                 children: [
                   Expanded(
                     child: Text(
-                      order.restaurantName ?? 'Commande #${order.id}',
+                      order.restaurantName ?? '${strings.t('orderNumber')} #${order.id}',
                       style: Theme.of(context).textTheme.titleMedium,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -160,7 +186,7 @@ class _OrderTile extends StatelessWidget {
                     TextButton(
                       onPressed: () => _cancel(context),
                       style: TextButton.styleFrom(foregroundColor: Theme.of(context).colorScheme.error),
-                      child: const Text('Annuler'),
+                      child: Text(strings.t('cancelOrder')),
                     ),
                 ],
               ),

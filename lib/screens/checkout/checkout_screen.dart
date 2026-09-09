@@ -7,6 +7,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/utils/formatters.dart';
 import '../../core/utils/validators.dart';
 import '../../providers/cart_provider.dart';
+import '../../providers/locale_provider.dart';
 import '../../providers/order_provider.dart';
 import '../../widgets/primary_button.dart';
 import '../order/order_tracking_screen.dart';
@@ -65,8 +66,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   @override
   Widget build(BuildContext context) {
     final cart = context.watch<CartProvider>();
+    final strings = context.watch<LocaleProvider>().strings;
     return Scaffold(
-      appBar: AppBar(title: const Text('Validation de commande')),
+      appBar: AppBar(title: Text(strings.t('orderConfirmation'))),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(20),
@@ -75,27 +77,27 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Adresse de livraison', style: Theme.of(context).textTheme.titleMedium),
+                Text(strings.t('deliveryAddress'), style: Theme.of(context).textTheme.titleMedium),
                 const SizedBox(height: 8),
                 TextFormField(
                   controller: _addressController,
-                  decoration: const InputDecoration(
-                    hintText: 'Ex: Rue 12, Mermoz, Dakar',
-                    prefixIcon: Icon(Icons.location_on_outlined),
+                  decoration: InputDecoration(
+                    hintText: strings.t('deliveryAddressHint'),
+                    prefixIcon: const Icon(Icons.location_on_outlined),
                   ),
                   validator: Validators.address,
                   maxLines: 2,
                 ),
                 const SizedBox(height: 20),
-                Text('Remarques', style: Theme.of(context).textTheme.titleMedium),
+                Text(strings.isFrench ? 'Remarques' : 'Notes', style: Theme.of(context).textTheme.titleMedium),
                 const SizedBox(height: 8),
                 TextFormField(
                   controller: _notesController,
-                  decoration: const InputDecoration(hintText: 'Sonnette cassée, code portail…'),
+                  decoration: InputDecoration(hintText: strings.t('notesHint')),
                   maxLines: 2,
                 ),
                 const SizedBox(height: 24),
-                Text('Récapitulatif', style: Theme.of(context).textTheme.titleMedium),
+                Text(strings.t('orderSummary'), style: Theme.of(context).textTheme.titleMedium),
                 const SizedBox(height: 8),
                 Container(
                   padding: const EdgeInsets.all(16),
@@ -119,14 +121,14 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text('Sous-total'),
+                          Text(strings.t('subtotal')),
                           Text(Formatters.currency(cart.subtotal)),
                         ],
                       ),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text('Frais de livraison'),
+                          Text(strings.t('deliveryFee')),
                           Text(Formatters.currency(cart.deliveryFee)),
                         ],
                       ),
@@ -134,7 +136,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text('Total', style: Theme.of(context).textTheme.titleMedium),
+                          Text(strings.t('total'), style: Theme.of(context).textTheme.titleMedium),
                           Text(
                             Formatters.currency(cart.total),
                             style: Theme.of(context).textTheme.titleMedium?.copyWith(color: AppColors.primary),
@@ -163,7 +165,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 ],
                 const SizedBox(height: 28),
                 PrimaryButton(
-                  label: 'Valider la commande',
+                  label: strings.t('placeOrder'),
                   isLoading: _submitting,
                   onPressed: _placeOrder,
                   icon: Icons.check_circle_outline_rounded,

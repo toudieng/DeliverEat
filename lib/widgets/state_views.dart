@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:provider/provider.dart';
+
+import '../providers/locale_provider.dart';
 
 class EmptyStateView extends StatelessWidget {
   const EmptyStateView({
@@ -69,7 +72,7 @@ class ErrorStateView extends StatelessWidget {
             FilledButton.icon(
               onPressed: onRetry,
               icon: const Icon(Icons.refresh_rounded),
-              label: const Text('Réessayer'),
+              label: Text(context.watch<LocaleProvider>().strings.t('retry')),
             ),
           ],
         ),

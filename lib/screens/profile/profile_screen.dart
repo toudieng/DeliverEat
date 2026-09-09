@@ -85,6 +85,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
         );
       }
       final updated = await _profileService.uploadAvatar(file);
+      // The server keeps the same avatar URL when replacing the file, so the
+      // disk/memory cache must be evicted or the old image keeps showing.
+      if (updated.avatarUrl != null && updated.avatarUrl!.isNotEmpty) {
+        await CachedNetworkImage.evictFromCache(updated.resolvedAvatarUrl);
+      }
       if (!mounted) return;
       context.read<AuthProvider>().setUser(updated);
     } on ApiException catch (e) {
@@ -106,7 +111,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           children: [
             ListTile(
               leading: const Icon(Icons.photo_library_outlined),
-              title: const Text('Choisir dans la galerie'),
+              title: Text(context.read<LocaleProvider>().strings.isFrench ? 'Choisir dans la galerie' : 'Choose from gallery'),
               onTap: () {
                 Navigator.pop(context);
                 _pickAvatar(ImageSource.gallery);
@@ -114,7 +119,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
             ListTile(
               leading: const Icon(Icons.camera_alt_outlined),
-              title: const Text('Prendre une photo'),
+              title: Text(context.read<LocaleProvider>().strings.isFrench ? 'Prendre une photo' : 'Take a photo'),
               onTap: () {
                 Navigator.pop(context);
                 _pickAvatar(ImageSource.camera);
@@ -201,21 +206,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   TextFormField(
                     controller: _nameController,
                     enabled: _editing,
-                    decoration: const InputDecoration(labelText: 'Nom', prefixIcon: Icon(Icons.person_outline_rounded)),
+                    decoration: InputDecoration(labelText: strings.t('name'), prefixIcon: const Icon(Icons.person_outline_rounded)),
                     validator: Validators.name,
                   ),
                   const SizedBox(height: 14),
                   TextFormField(
                     initialValue: user?.email,
                     enabled: false,
-                    decoration: const InputDecoration(labelText: 'E-mail', prefixIcon: Icon(Icons.mail_outline_rounded)),
+                    decoration: InputDecoration(labelText: strings.t('email'), prefixIcon: const Icon(Icons.mail_outline_rounded)),
                   ),
                   const SizedBox(height: 14),
                   TextFormField(
                     controller: _phoneController,
                     enabled: _editing,
                     keyboardType: TextInputType.phone,
-                    decoration: const InputDecoration(labelText: 'Téléphone', prefixIcon: Icon(Icons.phone_outlined)),
+                    decoration: InputDecoration(labelText: strings.t('phone'), prefixIcon: const Icon(Icons.phone_outlined)),
                   ),
                   if (_error != null) ...[
                     const SizedBox(height: 12),
@@ -223,7 +228,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ],
                   if (_editing) ...[
                     const SizedBox(height: 20),
-                    PrimaryButton(label: 'Enregistrer', isLoading: _saving, onPressed: _save),
+                    PrimaryButton(label: strings.t('save'), isLoading: _saving, onPressed: _save),
                   ],
                 ],
               ),

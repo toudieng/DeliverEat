@@ -12,6 +12,7 @@ import '../../models/restaurant.dart';
 import '../../models/review.dart';
 import '../../providers/cart_provider.dart';
 import '../../providers/favorites_provider.dart';
+import '../../providers/locale_provider.dart';
 import '../../services/catalog_service.dart';
 import '../../services/review_service.dart';
 import '../../widgets/menu_item_tile.dart';
@@ -76,36 +77,41 @@ class _RestaurantDetailScreenState extends State<RestaurantDetailScreen> {
 
   void _addToCart(MenuItem item) {
     final cart = context.read<CartProvider>();
+    final strings = context.read<LocaleProvider>().strings;
     final conflict = cart.tryAdd(_restaurant!, item);
     if (conflict != null) {
       _showConflictDialog(conflict, item);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('${item.name} ajouté au panier'), duration: const Duration(milliseconds: 900)),
+        SnackBar(content: Text('${item.name} ${strings.t('addedToCart')}'), duration: const Duration(milliseconds: 900)),
       );
     }
   }
 
   void _showConflictDialog(Restaurant newRestaurant, MenuItem item) {
+    final strings = context.read<LocaleProvider>().strings;
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Vider le panier ?'),
+        title: Text(strings.t('emptyCartDialogTitle')),
         content: Text(
-          'Votre panier contient déjà des articles de "${context.read<CartProvider>().restaurant?.name}". '
-          'Une commande ne peut concerner qu\'un seul restaurant.',
+          strings.isFrench
+              ? 'Votre panier contient déjà des articles de "${context.read<CartProvider>().restaurant?.name}". '
+                  'Une commande ne peut concerner qu\'un seul restaurant.'
+              : 'Your cart already has items from "${context.read<CartProvider>().restaurant?.name}". '
+                  'An order can only include one restaurant.',
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Annuler')),
+          TextButton(onPressed: () => Navigator.pop(context), child: Text(strings.t('cancel'))),
           FilledButton(
             onPressed: () {
               context.read<CartProvider>().clearAndAdd(newRestaurant, item);
               Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Panier vidé, ${item.name} ajouté')),
+                SnackBar(content: Text('${strings.t('cartCleared')} ${item.name} ${strings.t('addedToCart')}')),
               );
             },
-            child: const Text('Vider et ajouter'),
+            child: Text(strings.t('clearAndAdd')),
           ),
         ],
       ),
@@ -124,6 +130,7 @@ class _RestaurantDetailScreenState extends State<RestaurantDetailScreen> {
     final sections = MenuSection.groupBySection(restaurant.menu);
     final favorites = context.watch<FavoritesProvider>();
     final cart = context.watch<CartProvider>();
+    final strings = context.watch<LocaleProvider>().strings;
     final quantities = {for (final item in cart.items) item.menuItem.id: item.quantity};
 
     return Scaffold(
@@ -182,7 +189,7 @@ class _RestaurantDetailScreenState extends State<RestaurantDetailScreen> {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                           decoration: BoxDecoration(color: Colors.black87, borderRadius: BorderRadius.circular(100)),
-                          child: const Text('Fermé', style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700)),
+                          child: Text(strings.t('closed'), style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700)),
                         ),
                     ],
                   ),
@@ -206,10 +213,10 @@ class _RestaurantDetailScreenState extends State<RestaurantDetailScreen> {
             ).animate().fadeIn(duration: 300.ms),
           ),
           if (sections.isEmpty)
-            const SliverToBoxAdapter(
+            SliverToBoxAdapter(
               child: Padding(
-                padding: EdgeInsets.symmetric(vertical: 40),
-                child: EmptyStateView(message: 'Menu indisponible', icon: Icons.menu_book_rounded),
+                padding: const EdgeInsets.symmetric(vertical: 40),
+                child: EmptyStateView(message: strings.t('restaurantMenuUnavailable'), icon: Icons.menu_book_rounded),
               ),
             )
           else
@@ -260,7 +267,7 @@ class _RestaurantDetailScreenState extends State<RestaurantDetailScreen> {
                 child: FilledButton.icon(
                   onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const CartScreen())),
                   icon: const Icon(Icons.shopping_bag_rounded),
-                  label: Text('Voir le panier · ${Formatters.currency(cart.total)}'),
+                  label: Text('${strings.t('viewCart')} · ${Formatters.currency(cart.total)}'),
                 ),
               ),
             ).animate().slideY(begin: 1, end: 0, duration: 250.ms),
@@ -344,8 +351,9 @@ class _ReviewsSectionState extends State<_ReviewsSection> {
   }
 
   Future<void> _submit() async {
+    final strings = context.read<LocaleProvider>().strings;
     if (_commentController.text.trim().isEmpty) {
-      setState(() => _formError = 'Merci de laisser un commentaire.');
+      setState(() => _formError = strings.t('reviewCommentRequired'));
       return;
     }
     setState(() {
@@ -374,10 +382,11 @@ class _ReviewsSectionState extends State<_ReviewsSection> {
 
   @override
   Widget build(BuildContext context) {
+    final strings = context.watch<LocaleProvider>().strings;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Avis clients', style: Theme.of(context).textTheme.titleLarge),
+        Text(strings.t('customerReviews'), style: Theme.of(context).textTheme.titleLarge),
         const SizedBox(height: 12),
         if (widget.loading)
           const Padding(
@@ -387,7 +396,7 @@ class _ReviewsSectionState extends State<_ReviewsSection> {
         else if (widget.reviews.isEmpty)
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 12),
-            child: Text('Aucun avis pour le moment.', style: Theme.of(context).textTheme.bodyMedium),
+            child: Text(strings.t('noReviewsYet'), style: Theme.of(context).textTheme.bodyMedium),
           )
         else
           ...widget.reviews.map((review) => _ReviewTile(review: review)),
@@ -399,22 +408,22 @@ class _ReviewsSectionState extends State<_ReviewsSection> {
               color: AppColors.amber.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(14),
             ),
-            child: const Row(
+            child: Row(
               children: [
-                Icon(Icons.info_outline_rounded, color: AppColors.amber),
-                SizedBox(width: 10),
-                Expanded(child: Text('Vous avez déjà laissé un avis pour ce restaurant.')),
+                const Icon(Icons.info_outline_rounded, color: AppColors.amber),
+                const SizedBox(width: 10),
+                Expanded(child: Text(strings.t('alreadyReviewed'))),
               ],
             ),
           )
         else ...[
-          Text('Laisser un avis', style: Theme.of(context).textTheme.titleMedium),
+          Text(strings.t('leaveAReview'), style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: 6),
           RatingInput(value: _rating, onChanged: (v) => setState(() => _rating = v)),
           TextField(
             controller: _commentController,
             maxLines: 3,
-            decoration: const InputDecoration(hintText: 'Votre expérience…'),
+            decoration: InputDecoration(hintText: strings.t('yourExperience')),
           ),
           if (_formError != null) ...[
             const SizedBox(height: 8),
@@ -425,7 +434,7 @@ class _ReviewsSectionState extends State<_ReviewsSection> {
             onPressed: _submitting ? null : _submit,
             child: _submitting
                 ? const SizedBox(height: 18, width: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                : const Text('Publier'),
+                : Text(strings.t('publish')),
           ),
         ],
       ],

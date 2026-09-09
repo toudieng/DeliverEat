@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/validators.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/locale_provider.dart';
 import '../../widgets/primary_button.dart';
 import '../root/root_shell.dart';
 import 'register_screen.dart';
@@ -45,6 +46,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
+    final strings = context.watch<LocaleProvider>().strings;
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
@@ -63,13 +65,13 @@ class _LoginScreenState extends State<LoginScreen> {
                   child: const Icon(Icons.delivery_dining_rounded, color: Colors.white, size: 30),
                 ).animate().scale(duration: 400.ms, curve: Curves.easeOutBack),
                 const SizedBox(height: 24),
-                Text('Content de vous revoir 👋', style: Theme.of(context).textTheme.headlineSmall)
+                Text(strings.t('welcomeBack'), style: Theme.of(context).textTheme.headlineSmall)
                     .animate()
                     .fadeIn(delay: 100.ms)
                     .slideX(begin: -0.05, end: 0),
                 const SizedBox(height: 6),
                 Text(
-                  'Connectez-vous pour commander vos plats préférés',
+                  strings.t('welcomeBackSubtitle'),
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
@@ -78,9 +80,9 @@ class _LoginScreenState extends State<LoginScreen> {
                 TextFormField(
                   controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
-                  decoration: const InputDecoration(
-                    labelText: 'E-mail',
-                    prefixIcon: Icon(Icons.mail_outline_rounded),
+                  decoration: InputDecoration(
+                    labelText: strings.t('email'),
+                    prefixIcon: const Icon(Icons.mail_outline_rounded),
                   ),
                   validator: Validators.email,
                 ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.1, end: 0),
@@ -89,7 +91,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   controller: _passwordController,
                   obscureText: _obscure,
                   decoration: InputDecoration(
-                    labelText: 'Mot de passe',
+                    labelText: strings.t('password'),
                     prefixIcon: const Icon(Icons.lock_outline_rounded),
                     suffixIcon: IconButton(
                       icon: Icon(_obscure ? Icons.visibility_off_rounded : Icons.visibility_rounded),
@@ -104,7 +106,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   _ErrorBanner(message: auth.errorMessage!),
                 ],
                 const SizedBox(height: 28),
-                PrimaryButton(label: 'Connexion', isLoading: auth.isBusy, onPressed: _submit)
+                PrimaryButton(label: strings.t('login'), isLoading: auth.isBusy, onPressed: _submit)
                     .animate()
                     .fadeIn(delay: 300.ms)
                     .slideY(begin: 0.1, end: 0),
@@ -113,13 +115,13 @@ class _LoginScreenState extends State<LoginScreen> {
                   child: Wrap(
                     alignment: WrapAlignment.center,
                     children: [
-                      Text("Pas encore de compte ? ", style: Theme.of(context).textTheme.bodyMedium),
+                      Text(strings.t('noAccount'), style: Theme.of(context).textTheme.bodyMedium),
                       GestureDetector(
                         onTap: () => Navigator.of(context).push(
                           MaterialPageRoute(builder: (_) => const RegisterScreen()),
                         ),
                         child: Text(
-                          "S'inscrire",
+                          strings.t('register'),
                           style: TextStyle(
                             color: Theme.of(context).colorScheme.primary,
                             fontWeight: FontWeight.w700,

@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../../core/utils/formatters.dart';
 import '../../models/cart_item.dart';
 import '../../providers/cart_provider.dart';
+import '../../providers/locale_provider.dart';
 import '../../widgets/state_views.dart';
 import '../checkout/checkout_screen.dart';
 
@@ -14,12 +15,13 @@ class CartScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cart = context.watch<CartProvider>();
+    final strings = context.watch<LocaleProvider>().strings;
     return Scaffold(
-      appBar: AppBar(title: const Text('Panier')),
+      appBar: AppBar(title: Text(strings.t('cart'))),
       body: cart.isEmpty
-          ? const EmptyStateView(
-              message: 'Votre panier est vide',
-              subtitle: 'Ajoutez des plats depuis un restaurant pour commencer.',
+          ? EmptyStateView(
+              message: strings.t('emptyCart'),
+              subtitle: strings.t('emptyCartSubtitle'),
               icon: Icons.shopping_bag_outlined,
             )
           : Column(
@@ -129,6 +131,7 @@ class _CartSummary extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final strings = context.watch<LocaleProvider>().strings;
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
       decoration: BoxDecoration(
@@ -141,14 +144,14 @@ class _CartSummary extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _SummaryRow(label: 'Sous-total', value: cart.subtotal),
-            _SummaryRow(label: 'Frais de livraison', value: cart.deliveryFee),
+            _SummaryRow(label: strings.t('subtotal'), value: cart.subtotal),
+            _SummaryRow(label: strings.t('deliveryFee'), value: cart.deliveryFee),
             const Divider(height: 20),
-            _SummaryRow(label: 'Total', value: cart.total, emphasized: true),
+            _SummaryRow(label: strings.t('total'), value: cart.total, emphasized: true),
             const SizedBox(height: 16),
             FilledButton(
               onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const CheckoutScreen())),
-              child: const Text('Commander'),
+              child: Text(strings.t('checkout')),
             ),
           ],
         ),

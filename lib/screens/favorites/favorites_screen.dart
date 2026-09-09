@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../providers/favorites_provider.dart';
+import '../../providers/locale_provider.dart';
 import '../../widgets/restaurant_card.dart';
 import '../../widgets/skeletons.dart';
 import '../../widgets/state_views.dart';
@@ -13,8 +14,9 @@ class FavoritesScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final favorites = context.watch<FavoritesProvider>();
+    final strings = context.watch<LocaleProvider>().strings;
     return Scaffold(
-      appBar: AppBar(title: const Text('Mes favoris')),
+      appBar: AppBar(title: Text(strings.t('myFavorites'))),
       body: RefreshIndicator(
         onRefresh: favorites.load,
         child: Builder(builder: (context) {
@@ -25,9 +27,9 @@ class FavoritesScreen extends StatelessWidget {
             return ErrorStateView(message: favorites.errorMessage!, onRetry: favorites.load);
           }
           if (favorites.favorites.isEmpty) {
-            return const EmptyStateView(
-              message: 'Aucun restaurant favori',
-              subtitle: 'Appuyez sur le cœur d\'un restaurant pour le retrouver ici.',
+            return EmptyStateView(
+              message: strings.t('noFavorites'),
+              subtitle: strings.t('noFavoritesSubtitle'),
               icon: Icons.favorite_border_rounded,
             );
           }

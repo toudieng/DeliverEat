@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:provider/provider.dart';
 
 import '../core/theme/app_colors.dart';
 import '../core/utils/formatters.dart';
 import '../models/order.dart';
+import '../providers/locale_provider.dart';
 
 class OrderStatusTimeline extends StatelessWidget {
   const OrderStatusTimeline({super.key, required this.order});
@@ -18,19 +20,23 @@ class OrderStatusTimeline extends StatelessWidget {
     OrderStatus.delivered: Icons.home_rounded,
   };
 
-  static const Map<OrderStatus, String> _labels = {
-    OrderStatus.pending: 'Commande reçue',
-    OrderStatus.confirmed: 'Confirmée',
-    OrderStatus.preparing: 'En préparation',
-    OrderStatus.delivering: 'En livraison',
-    OrderStatus.delivered: 'Livrée',
-  };
+  static Map<OrderStatus, String> _labels(BuildContext context) {
+    final strings = context.watch<LocaleProvider>().strings;
+    return {
+      OrderStatus.pending: strings.isFrench ? 'Commande reçue' : 'Order received',
+      OrderStatus.confirmed: strings.t('statusConfirmed'),
+      OrderStatus.preparing: strings.t('statusPreparing'),
+      OrderStatus.delivering: strings.t('statusDelivering'),
+      OrderStatus.delivered: strings.isFrench ? 'Livrée' : 'Delivered',
+    };
+  }
 
   @override
   Widget build(BuildContext context) {
     if (order.status == OrderStatus.cancelled) {
       return _CancelledBanner(order: order);
     }
+    final labels = _labels(context);
     final currentIndex = kOrderProgression.indexOf(order.status);
     final historyByStatus = {for (final e in order.statusHistory) e.status: e.timestamp};
 
@@ -92,7 +98,7 @@ class OrderStatusTimeline extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        _labels[status] ?? status.name,
+                        labels[status] ?? status.name,
                         style: Theme.of(context).textTheme.titleMedium?.copyWith(
                               color: reached ? null : Theme.of(context).colorScheme.onSurfaceVariant,
                               fontWeight: isCurrent ? FontWeight.w800 : FontWeight.w600,
@@ -106,7 +112,7 @@ class OrderStatusTimeline extends StatelessWidget {
                               ),
                         )
                       else if (isCurrent)
-                        _PulsingLabel(text: 'En cours…'),
+                        _PulsingLabel(text: context.watch<LocaleProvider>().strings.isFrench ? 'En cours…' : 'In progress…'),
                     ],
                   ),
                 ),
@@ -148,8 +154,11 @@ class _CancelledBanner extends StatelessWidget {
         children: [
           const Icon(Icons.cancel_rounded, color: AppColors.danger),
           const SizedBox(width: 12),
-          const Expanded(
-            child: Text('Commande annulée', style: TextStyle(fontWeight: FontWeight.w700, color: AppColors.danger)),
+          Expanded(
+            child: Text(
+              context.watch<LocaleProvider>().strings.isFrench ? 'Commande annulée' : 'Order cancelled',
+              style: const TextStyle(fontWeight: FontWeight.w700, color: AppColors.danger),
+            ),
           ),
         ],
       ),
@@ -179,20 +188,21 @@ class OrderStatusBadge extends StatelessWidget {
     }
   }
 
-  String _label() {
+  String _label(BuildContext context) {
+    final strings = context.watch<LocaleProvider>().strings;
     switch (status) {
       case OrderStatus.pending:
-        return 'En attente';
+        return strings.t('statusPending');
       case OrderStatus.confirmed:
-        return 'Confirmée';
+        return strings.isFrench ? 'Confirmée' : 'Confirmed';
       case OrderStatus.preparing:
-        return 'En préparation';
+        return strings.t('statusPreparing');
       case OrderStatus.delivering:
-        return 'En livraison';
+        return strings.t('statusDelivering');
       case OrderStatus.delivered:
-        return 'Livrée';
+        return strings.isFrench ? 'Livrée' : 'Delivered';
       case OrderStatus.cancelled:
-        return 'Annulée';
+        return strings.isFrench ? 'Annulée' : 'Cancelled';
       case OrderStatus.unknown:
         return '—';
     }
@@ -204,7 +214,7 @@ class OrderStatusBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(color: color.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(100)),
-      child: Text(_label(), style: TextStyle(color: color, fontWeight: FontWeight.w700, fontSize: 12)),
+      child: Text(_label(context), style: TextStyle(color: color, fontWeight: FontWeight.w700, fontSize: 12)),
     );
   }
 }

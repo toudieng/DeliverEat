@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/l10n/app_strings.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/debouncer.dart';
 import '../../models/restaurant.dart';
@@ -27,12 +28,6 @@ class _HomeScreenState extends State<HomeScreen> {
   final _searchController = TextEditingController();
   final _debouncer = Debouncer();
 
-  static const Map<String, String> _sortOptions = {
-    'rating': 'Note',
-    'deliveryTime': 'Délai',
-    'deliveryFee': 'Frais',
-  };
-
   @override
   void initState() {
     super.initState();
@@ -43,11 +38,11 @@ class _HomeScreenState extends State<HomeScreen> {
     _scrollController.addListener(_onScroll);
   }
 
-  String _greeting() {
+  String _greeting(AppStrings strings) {
     final hour = DateTime.now().hour;
-    if (hour < 12) return 'Bonjour ☀️ Petite faim ?';
-    if (hour < 18) return 'Bon appétit 🍽️';
-    return 'Bonsoir 🌙 On commande ?';
+    if (hour < 12) return strings.t('greetingMorning');
+    if (hour < 18) return strings.t('greetingAfternoon');
+    return strings.t('greetingEvening');
   }
 
   void _onScroll() {
@@ -103,7 +98,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            _greeting(),
+                            _greeting(strings),
                             style: const TextStyle(
                               color: Colors.white,
                               fontSize: 19,
@@ -116,7 +111,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               const Icon(Icons.location_on_rounded, size: 16, color: Colors.white),
                               const SizedBox(width: 4),
                               Text(
-                                'Livraison à Dakar, Sénégal',
+                                '${strings.t('deliveringTo')} Dakar, Sénégal',
                                 style: TextStyle(color: Colors.white.withValues(alpha: 0.92), fontSize: 13),
                               ),
                             ],
@@ -189,13 +184,17 @@ class _HomeScreenState extends State<HomeScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Row(
                 children: [
-                  Text('Trier par', style: Theme.of(context).textTheme.bodyMedium),
+                  Text(strings.t('sortBy'), style: Theme.of(context).textTheme.bodyMedium),
                   const SizedBox(width: 10),
                   Expanded(
                     child: SingleChildScrollView(
                       scrollDirection: Axis.horizontal,
                       child: Row(
-                        children: _sortOptions.entries.map((entry) {
+                        children: {
+                          'rating': strings.t('sortRating'),
+                          'deliveryTime': strings.t('sortDeliveryTime'),
+                          'deliveryFee': strings.t('sortDeliveryFee'),
+                        }.entries.map((entry) {
                           final selected = provider.sort == entry.key;
                           return Padding(
                             padding: const EdgeInsets.only(right: 8),
@@ -213,14 +212,14 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
             const SizedBox(height: 8),
-            Expanded(child: _buildBody(provider, favorites)),
+            Expanded(child: _buildBody(provider, favorites, strings)),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildBody(RestaurantListProvider provider, FavoritesProvider favorites) {
+  Widget _buildBody(RestaurantListProvider provider, FavoritesProvider favorites, AppStrings strings) {
     switch (provider.state) {
       case LoadState.idle:
       case LoadState.loading:
@@ -232,8 +231,8 @@ class _HomeScreenState extends State<HomeScreen> {
         );
       case LoadState.empty:
         return EmptyStateView(
-          message: 'Aucun résultat',
-          subtitle: 'Essayez une autre recherche ou catégorie.',
+          message: strings.t('noResults'),
+          subtitle: strings.t('noResultsSubtitle'),
           icon: Icons.ramen_dining_rounded,
         );
       case LoadState.loaded:

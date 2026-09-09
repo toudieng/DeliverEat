@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/validators.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/locale_provider.dart';
 import '../../widgets/primary_button.dart';
 import '../root/root_shell.dart';
 
@@ -50,6 +51,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
+    final strings = context.watch<LocaleProvider>().strings;
     return Scaffold(
       appBar: AppBar(),
       body: SafeArea(
@@ -60,13 +62,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Créer un compte', style: Theme.of(context).textTheme.headlineSmall)
+                Text(strings.t('createAccount'), style: Theme.of(context).textTheme.headlineSmall)
                     .animate()
                     .fadeIn()
                     .slideX(begin: -0.05, end: 0),
                 const SizedBox(height: 6),
                 Text(
-                  'Rejoignez DeliverEat en quelques secondes',
+                  strings.t('createAccountSubtitle'),
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
@@ -74,14 +76,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 const SizedBox(height: 28),
                 TextFormField(
                   controller: _nameController,
-                  decoration: const InputDecoration(labelText: 'Nom', prefixIcon: Icon(Icons.person_outline_rounded)),
+                  decoration: InputDecoration(labelText: strings.t('name'), prefixIcon: const Icon(Icons.person_outline_rounded)),
                   validator: Validators.name,
                 ).animate().fadeIn(delay: 100.ms).slideY(begin: 0.1, end: 0),
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
-                  decoration: const InputDecoration(labelText: 'E-mail', prefixIcon: Icon(Icons.mail_outline_rounded)),
+                  decoration: InputDecoration(labelText: strings.t('email'), prefixIcon: const Icon(Icons.mail_outline_rounded)),
                   validator: Validators.email,
                 ).animate().fadeIn(delay: 150.ms).slideY(begin: 0.1, end: 0),
                 const SizedBox(height: 16),
@@ -89,8 +91,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   controller: _passwordController,
                   obscureText: _obscure,
                   decoration: InputDecoration(
-                    labelText: 'Mot de passe',
-                    helperText: '6 caractères minimum',
+                    labelText: strings.t('password'),
+                    helperText: strings.t('passwordMinLength'),
                     prefixIcon: const Icon(Icons.lock_outline_rounded),
                     suffixIcon: IconButton(
                       icon: Icon(_obscure ? Icons.visibility_off_rounded : Icons.visibility_rounded),
@@ -118,7 +120,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ).animate().shake(duration: 400.ms),
                 ],
                 const SizedBox(height: 28),
-                PrimaryButton(label: "S'inscrire", isLoading: auth.isBusy, onPressed: _submit)
+                PrimaryButton(label: strings.t('register'), isLoading: auth.isBusy, onPressed: _submit)
                     .animate()
                     .fadeIn(delay: 250.ms)
                     .slideY(begin: 0.1, end: 0),
