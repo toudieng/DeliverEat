@@ -145,11 +145,14 @@ class _RestaurantDetailScreenState extends State<RestaurantDetailScreen> {
               background: Stack(
                 fit: StackFit.expand,
                 children: [
-                  CachedNetworkImage(
-                    imageUrl: restaurant.resolvedImageUrl,
-                    fit: BoxFit.cover,
-                    placeholder: (_, _) => Container(color: Theme.of(context).colorScheme.surfaceContainerHighest),
-                    errorWidget: (_, _, _) => Container(color: Theme.of(context).colorScheme.surfaceContainerHighest),
+                  Hero(
+                    tag: 'restaurant-image-${restaurant.id}',
+                    child: CachedNetworkImage(
+                      imageUrl: restaurant.resolvedImageUrl,
+                      fit: BoxFit.cover,
+                      placeholder: (_, _) => Container(color: Theme.of(context).colorScheme.surfaceContainerHighest),
+                      errorWidget: (_, _, _) => Container(color: Theme.of(context).colorScheme.surfaceContainerHighest),
+                    ),
                   ),
                   Container(
                     decoration: const BoxDecoration(
@@ -200,8 +203,8 @@ class _RestaurantDetailScreenState extends State<RestaurantDetailScreen> {
                   const Divider(height: 32),
                 ],
               ),
-            ),
-          ).animate().fadeIn(duration: 300.ms),
+            ).animate().fadeIn(duration: 300.ms),
+          ),
           if (sections.isEmpty)
             const SliverToBoxAdapter(
               child: Padding(
