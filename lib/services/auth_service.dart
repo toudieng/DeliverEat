@@ -63,7 +63,7 @@ class AuthService {
 
   Future<AppUser> me() async {
     final response = await _client.get('/auth/me');
-    return AppUser.fromJson(response.data as Map<String, dynamic>);
+    return AppUser.fromJson(unwrapUser(response.data as Map<String, dynamic>));
   }
 
   Future<AppUser> updateProfile({String? name, String? phone}) async {
@@ -71,6 +71,15 @@ class AuthService {
       if (name != null) 'name': name,
       if (phone != null) 'phone': phone,
     });
-    return AppUser.fromJson(response.data as Map<String, dynamic>);
+    return AppUser.fromJson(unwrapUser(response.data as Map<String, dynamic>));
   }
+}
+
+/// The API wraps the user object as `{ "user": { ... } }` on some endpoints
+/// (`/auth/me`, `/auth/me/avatar`) and returns it flat on others. Handle
+/// both shapes so we're not guessing which one a given endpoint uses.
+Map<String, dynamic> unwrapUser(Map<String, dynamic> json) {
+  final nested = json['user'];
+  if (nested is Map<String, dynamic>) return nested;
+  return json;
 }
