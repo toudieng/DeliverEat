@@ -24,8 +24,17 @@ class ApiClient {
     );
     _dio.interceptors.add(_AuthInterceptor(this));
     if (kDebugMode) {
+      // Debug-only request/response logging (never active in release
+      // builds). Headers are omitted so bearer tokens never hit logcat.
       _dio.interceptors.add(
-        LogInterceptor(requestBody: false, responseBody: true, error: true, logPrint: (o) => debugPrint('[API] $o')),
+        LogInterceptor(
+          requestHeader: false,
+          requestBody: false,
+          responseHeader: false,
+          responseBody: true,
+          error: true,
+          logPrint: (o) => debugPrint('[API] $o'),
+        ),
       );
     }
   }

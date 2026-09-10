@@ -68,8 +68,8 @@ class AuthService {
 
   Future<AppUser> updateProfile({String? name, String? phone}) async {
     final response = await _client.patch('/auth/me', data: {
-      if (name != null) 'name': name,
-      if (phone != null) 'phone': phone,
+      'name': ?name,
+      'phone': ?phone,
     });
     return AppUser.fromJson(unwrapUser(response.data as Map<String, dynamic>));
   }

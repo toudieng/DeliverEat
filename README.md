@@ -51,7 +51,7 @@ lib/
   la requête d'origine — invisible pour l'utilisateur. Un `Completer` garantit
   qu'un seul rafraîchissement est en vol même si plusieurs requêtes échouent en
   même temps.
-- La déconnexion appelle `/api/auth/logout` puis vide le stockage local, quoi
+- La déconnexion appelle `/api/auth/logout` puis vide le stockage local quoi
   qu'il arrive.
 
 ### Accueil & catalogue (Partie 2)
@@ -72,13 +72,16 @@ lib/
   boîte de dialogue (vider le panier / annuler).
 - Favoris synchronisés avec l'API, mise à jour optimiste avec rollback en cas
   d'échec.
+- Animation `Hero` entre la carte restaurant et sa fiche détail.
 
 ### Commande & suivi temps réel (Partie 4)
 
 - Écran de validation avec adresse validée, remarques facultatives, gestion de
   `422 RESTAURANT_CLOSED`.
 - `OrderSocketService` se connecte à `wss://…/ws?token=…`, anime la frise de
-  statuts à chaque `order_update`, affiche les horodatages de `statusHistory`.
+  statuts à chaque `order_update`, affiche les horodatages de `statusHistory`,
+  et déclenche une petite célébration (confettis) à l'arrivée du statut
+  `delivered`.
 - Robustesse : `OrderTrackingProvider` bascule automatiquement sur un polling de
   `GET /api/orders/:id` (toutes les 8 s) dès que le WebSocket se déconnecte, et
   revient au WebSocket dès qu'il se reconnecte avec un jeton d'accès frais
@@ -100,19 +103,21 @@ lib/
 ### Bonus
 
 - **Mode sombre** persistant (`ThemeProvider` + `shared_preferences`).
-- **Localisation FR/EN** avec un petit système de traduction sans génération de
-  code (`AppStrings`), pour garantir un `flutter run` toujours sans étape
-  supplémentaire.
+- **Localisation FR/EN** complète sur tous les écrans, via un petit système de
+  traduction sans génération de code (`AppStrings`), pour garantir un
+  `flutter run` toujours sans étape supplémentaire.
 - **Animations Hero** entre la liste de restaurants et la fiche détail, plus des
-  micro-interactions (`flutter_animate`) sur à peu près tous les écrans :
-  apparition en fondu/glissement, cœur animé, frise de statut qui pulse sur
-  l'étape en cours, shimmer de chargement, etc.
+  micro-interactions (`flutter_animate`) partout : apparition en fondu/
+  glissement en cascade sur les listes, cœur animé, frise de statut qui pulse
+  sur l'étape en cours, bannière de bienvenue dégradée avec message selon
+  l'heure, rebond du panier flottant à chaque ajout, célébration animée à la
+  livraison.
 
 ## Packages utilisés
 
 | Package | Rôle |
 |---|---|
-| `dio` | Client HTTP + intercepteurs (auth, refresh, erreurs) |
+| `dio` | Client HTTP + intercepteurs (auth, refresh, erreurs, logs debug) |
 | `flutter_secure_storage` | Stockage sécurisé des jetons |
 | `provider` | Gestion d'état |
 | `web_socket_channel` | Suivi de commande en temps réel |
@@ -123,22 +128,47 @@ lib/
 | `flutter_animate` | Animations déclaratives |
 | `shimmer` | Effets de chargement squelette |
 | `intl` | Formatage des montants CFA |
+| `flutter_localizations` | Délégués de localisation Material/Widgets/Cupertino |
 
 ## Difficultés rencontrées
 
-- Ce projet a été développé dans un environnement dont l'accès réseau sortant
-  était restreint par une politique d'entreprise : l'adresse de l'API fournie
-  n'était pas joignable pendant le développement (blocage réseau côté
-  environnement, indépendant de l'API elle-même). Le client API a donc été
-  écrit strictement d'après la documentation fournie (endpoints, formats de
-  requête/réponse, codes d'erreur), mais **n'a pas pu être testé en conditions
-  réelles contre le serveur**. `flutter analyze` et `flutter test` passent sans
-  erreur, ce qui garantit la compilation, mais un passage de vérification
-  contre l'API réelle (noms de champs JSON exacts, en particulier dans les
-  réponses `restaurant`, `order` et `review`) est recommandé avant la remise
-  finale.
-- Le rafraîchissement de jeton dans l'URL du WebSocket (`?token=`) est un cas
-  particulier : le token expire comme n'importe quel access token, donc la
-  reconnexion relit systématiquement le token courant depuis le stockage
-  sécurisé (mis à jour par l'intercepteur HTTP) plutôt que de réutiliser
-  l'ancien.
+- **Forme des réponses `/auth/me` et `/auth/me/avatar`.** La documentation
+  laissait penser que ces deux endpoints renvoyaient l'utilisateur « à plat »,
+  alors qu'ils l'enveloppent en réalité dans `{ "user": { ... } } }`, comme
+  `login`/`register`. Résultat : l'édition du profil et l'upload d'avatar
+  semblaient « ne rien faire » côté app, sans la moindre erreur visible,
+  puisque `AppUser.fromJson` recevait l'enveloppe au lieu de l'objet utilisateur
+  et retombait silencieusement sur des champs vides. Diagnostiqué en ajoutant un
+  `LogInterceptor` Dio (actif uniquement en debug) pour voir le JSON brut, puis
+  corrigé avec un petit `unwrapUser()` partagé qui gère les deux formes.
+- **Avatar qui ne se rafraîchissait pas visuellement.** Même une fois le
+  parsing corrigé, la nouvelle photo n'apparaissait pas : le serveur réutilise
+  la même URL de fichier, et `Image`/`CircleAvatar` ne redemande une image que
+  si son `ImageProvider` change réellement (par égalité). Un `ImageProvider`
+  identique = pas de nouvelle requête, même avec le cache vidé. Résolu en
+  ajoutant un paramètre `?v=<timestamp>` local après chaque upload réussi, pour
+  forcer un `ImageProvider` réellement différent.
+- **Crash à l'ouverture d'une fiche restaurant** (`'_elements.contains(element)'`
+  puis `RenderViewport expected RenderSliver…`). Cause réelle : un
+  `.animate()` de `flutter_animate` était chaîné sur un `SliverToBoxAdapter`
+  lui-même plutôt que sur son contenu, ce qui le transformait en widget
+  « boîte » alors que la liste défilante attendait un vrai sliver à cet
+  emplacement. Le message d'erreur affiché en premier (une assertion de
+  `GlobalKey`) était une conséquence en cascade, pas la cause — la vraie piste
+  se trouvait dans le tout premier bloc d'exception affiché par Flutter.
+- **Environnement Windows** : plusieurs blocages avant même de pouvoir
+  compiler — connexion IPv6 cassée faisant échouer le téléchargement du SDK
+  Android (corrigé avec `-Djava.net.preferIPv4Stack=true` en variable
+  `JAVA_TOOL_OPTIONS`), puis un chemin d'installation contenant un espace
+  (`C:\Users\<nom avec espace>\...`) qui casse l'outillage Dart/Android sur
+  Windows — réglé en réinstallant le SDK Flutter et le SDK Android sous des
+  chemins sans espace (`C:\flutter`, `C:\Android\sdk`).
+- **Compte de démonstration partagé.** `demo@delivereat.app` étant utilisé par
+  tous les candidats, il accumule des commandes et des avis d'autres sessions
+  de test — ce qui est normal (l'app affiche fidèlement les données du compte
+  connecté) mais peut surprendre. Un compte personnel via l'inscription donne
+  un historique propre.
+
+Le projet a été développé et débogué en échange continu avec l'API réelle une
+fois ces blocages d'environnement levés, ce qui a permis de corriger les
+hypothèses de départ sur la forme exacte de certaines réponses.

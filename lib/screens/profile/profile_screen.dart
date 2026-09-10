@@ -93,14 +93,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
           message: 'Fichier trop volumineux',
         );
       }
-      final uploadResult = await _profileService.uploadAvatar(file);
-      debugPrint('[AVATAR] upload response avatarUrl = ${uploadResult.avatarUrl}');
-      // Don't trust the upload response's own shape for the fresh
-      // avatarUrl — re-fetch the canonical profile from /auth/me so we're
-      // never out of sync with whatever the upload endpoint actually
-      // returns.
+      await _profileService.uploadAvatar(file);
+      // The upload response's own shape isn't relied upon here — re-fetch
+      // the canonical profile from /auth/me, the documented source of
+      // truth for the current avatarUrl.
       final AppUser refreshed = await _authService.me();
-      debugPrint('[AVATAR] /auth/me avatarUrl = ${refreshed.avatarUrl}');
       // The server keeps the same avatar URL when replacing the file, so the
       // disk cache must be evicted or the old bytes keep being served.
       if (refreshed.avatarUrl != null && refreshed.avatarUrl!.isNotEmpty) {
@@ -110,11 +107,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
       setState(() => _avatarCacheBuster = DateTime.now().millisecondsSinceEpoch);
       context.read<AuthProvider>().setUser(refreshed);
     } on ApiException catch (e) {
-      debugPrint('[AVATAR] ApiException ${e.statusCode} ${e.code} ${e.message}');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.friendlyMessage)));
-    } catch (e, st) {
-      debugPrint('[AVATAR] unexpected error: $e\n$st');
+    } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Impossible d'envoyer la photo.")));
     }
