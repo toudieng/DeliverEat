@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 
 import '../config/api_config.dart';
 import '../storage/secure_storage_service.dart';
@@ -22,6 +23,11 @@ class ApiClient {
       ),
     );
     _dio.interceptors.add(_AuthInterceptor(this));
+    if (kDebugMode) {
+      _dio.interceptors.add(
+        LogInterceptor(requestBody: false, responseBody: true, error: true, logPrint: (o) => debugPrint('[API] $o')),
+      );
+    }
   }
 
   static final ApiClient instance = ApiClient._internal();
