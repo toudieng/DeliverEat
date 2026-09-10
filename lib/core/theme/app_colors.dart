@@ -15,6 +15,7 @@ class AppColors {
   static const Color darkSurface = Color(0xFF201A18);
 
   static const List<Color> heroGradient = [Color(0xFFFF7A50), Color(0xFFFF3D2E)];
+  static const List<Color> successGradient = [Color(0xFF34D399), Color(0xFF0D9F6E)];
 
   static const Color success = Color(0xFF1FAE7A);
   static const Color danger = Color(0xFFE53E3E);

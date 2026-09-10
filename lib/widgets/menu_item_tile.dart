@@ -82,25 +82,58 @@ class MenuItemTile extends StatelessWidget {
                     : const SizedBox(height: 18, key: ValueKey('empty')),
               ),
               const SizedBox(height: 4),
-              InkWell(
-                onTap: item.available ? onAdd : null,
-                borderRadius: BorderRadius.circular(100),
-                child: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: item.available ? scheme.primary : scheme.surfaceContainerHighest,
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    Icons.add_rounded,
-                    color: item.available ? scheme.onPrimary : scheme.onSurfaceVariant,
-                    size: 20,
-                  ),
-                ),
-              ),
+              _BouncyAddButton(enabled: item.available, onTap: onAdd),
             ],
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _BouncyAddButton extends StatefulWidget {
+  const _BouncyAddButton({required this.enabled, required this.onTap});
+
+  final bool enabled;
+  final VoidCallback onTap;
+
+  @override
+  State<_BouncyAddButton> createState() => _BouncyAddButtonState();
+}
+
+class _BouncyAddButtonState extends State<_BouncyAddButton> {
+  bool _pressed = false;
+
+  void _punch() {
+    setState(() => _pressed = true);
+    Future.delayed(const Duration(milliseconds: 120), () {
+      if (mounted) setState(() => _pressed = false);
+    });
+    widget.onTap();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return InkWell(
+      onTap: widget.enabled ? _punch : null,
+      borderRadius: BorderRadius.circular(100),
+      child: AnimatedScale(
+        scale: _pressed ? 0.8 : 1.0,
+        duration: const Duration(milliseconds: 120),
+        curve: Curves.easeOut,
+        child: Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: widget.enabled ? scheme.primary : scheme.surfaceContainerHighest,
+            shape: BoxShape.circle,
+          ),
+          child: Icon(
+            Icons.add_rounded,
+            color: widget.enabled ? scheme.onPrimary : scheme.onSurfaceVariant,
+            size: 20,
+          ),
+        ),
       ),
     );
   }

@@ -14,30 +14,38 @@ class CategoryChip extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     return GestureDetector(
       onTap: onTap,
-      child: AnimatedContainer(
+      child: AnimatedScale(
+        scale: selected ? 1.06 : 1.0,
         duration: const Duration(milliseconds: 220),
-        curve: Curves.easeOut,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        margin: const EdgeInsets.only(right: 10),
-        decoration: BoxDecoration(
-          color: selected ? scheme.primary : scheme.surfaceContainerHighest.withValues(alpha: 0.5),
-          borderRadius: BorderRadius.circular(100),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (category.emoji != null) ...[
-              Text(category.emoji!, style: const TextStyle(fontSize: 16)),
-              const SizedBox(width: 6),
-            ],
-            Text(
-              category.name,
-              style: TextStyle(
-                color: selected ? scheme.onPrimary : scheme.onSurface,
-                fontWeight: FontWeight.w600,
+        curve: Curves.easeOutBack,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 220),
+          curve: Curves.easeOut,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          margin: const EdgeInsets.only(right: 10),
+          decoration: BoxDecoration(
+            color: selected ? scheme.primary : scheme.surfaceContainerHighest.withValues(alpha: 0.5),
+            borderRadius: BorderRadius.circular(100),
+            boxShadow: selected
+                ? [BoxShadow(color: scheme.primary.withValues(alpha: 0.35), blurRadius: 10, offset: const Offset(0, 4))]
+                : null,
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (category.emoji != null) ...[
+                Text(category.emoji!, style: const TextStyle(fontSize: 16)),
+                const SizedBox(width: 6),
+              ],
+              Text(
+                category.name,
+                style: TextStyle(
+                  color: selected ? scheme.onPrimary : scheme.onSurface,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

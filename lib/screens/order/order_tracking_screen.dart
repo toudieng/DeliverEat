@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
@@ -54,18 +56,31 @@ class _OrderTrackingView extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Container(
+                      key: ValueKey('hero-${order.status}'),
                       padding: const EdgeInsets.all(18),
                       width: double.infinity,
                       decoration: BoxDecoration(
-                        gradient: const LinearGradient(colors: AppColors.heroGradient),
+                        gradient: LinearGradient(
+                          colors: order.status == OrderStatus.delivered
+                              ? AppColors.successGradient
+                              : AppColors.heroGradient,
+                        ),
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            order.restaurantName ?? strings.t('yourOrder'),
-                            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 18),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  order.restaurantName ?? strings.t('yourOrder'),
+                                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 18),
+                                ),
+                              ),
+                              if (order.status == OrderStatus.delivered) const _DeliveredBadge(),
+                            ],
                           ),
                           const SizedBox(height: 4),
                           Text(
@@ -116,6 +131,59 @@ class _OrderTrackingView extends StatelessWidget {
                 ),
               ),
             ),
+    );
+  }
+}
+
+class _DeliveredBadge extends StatelessWidget {
+  const _DeliveredBadge();
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 60,
+      height: 60,
+      child: Stack(
+        alignment: Alignment.center,
+        clipBehavior: Clip.none,
+        children: [
+          for (var i = 0; i < 8; i++) _ConfettiDot(index: i),
+          Container(
+            width: 34,
+            height: 34,
+            decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+            child: const Icon(Icons.check_rounded, color: AppColors.success, size: 22),
+          ).animate().scale(duration: 500.ms, curve: Curves.elasticOut),
+        ],
+      ),
+    );
+  }
+}
+
+class _ConfettiDot extends StatelessWidget {
+  const _ConfettiDot({required this.index});
+  final int index;
+
+  static const _colors = [AppColors.amber, Colors.white, AppColors.secondary];
+
+  @override
+  Widget build(BuildContext context) {
+    final angle = (index / 8) * 2 * math.pi;
+    final dx = 34 * math.cos(angle);
+    final dy = 34 * math.sin(angle);
+    return Positioned(
+      left: 30,
+      top: 30,
+      child: Container(
+        width: 6,
+        height: 6,
+        decoration: BoxDecoration(color: _colors[index % _colors.length], shape: BoxShape.circle),
+      )
+          .animate()
+          .fadeIn(duration: 150.ms)
+          .moveX(begin: 0, end: dx, duration: 650.ms, curve: Curves.easeOut)
+          .moveY(begin: 0, end: dy, duration: 650.ms, curve: Curves.easeOut)
+          .fadeOut(delay: 250.ms, duration: 400.ms),
     );
   }
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
 
 import '../../providers/cart_provider.dart';
@@ -34,16 +35,19 @@ class _RootShellState extends State<RootShell> {
       body: IndexedStack(index: _index, children: _screens),
       floatingActionButton: cart.isEmpty
           ? null
-          : FloatingActionButton.extended(
-              onPressed: () => Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const CartScreen()),
+          : KeyedSubtree(
+              key: ValueKey(cart.itemCount),
+              child: FloatingActionButton.extended(
+                onPressed: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const CartScreen()),
+                ),
+                icon: Badge(
+                  label: Text('${cart.itemCount}'),
+                  child: const Icon(Icons.shopping_bag_rounded),
+                ),
+                label: Text(strings.t('cart')),
               ),
-              icon: Badge(
-                label: Text('${cart.itemCount}'),
-                child: const Icon(Icons.shopping_bag_rounded),
-              ),
-              label: Text(strings.t('cart')),
-            ),
+            ).animate().scale(begin: const Offset(0.7, 0.7), end: const Offset(1, 1), duration: 350.ms, curve: Curves.elasticOut),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _index,
         onDestinationSelected: (i) => setState(() => _index = i),
